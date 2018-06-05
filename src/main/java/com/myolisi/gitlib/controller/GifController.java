@@ -4,6 +4,8 @@ import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
+import com.google.common.reflect.TypeToken;
+import com.myolisi.gitlib.Videos;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -33,18 +35,20 @@ public class GifController {
 
     @RequestMapping (value = "/videos")
     @ResponseBody
-    public List<String> getVideos(){
+    public List<Videos> getVideos(){
 
         Cluster cluster = Cluster.builder().addContactPoint("127.0.0.1").build();
         Session session = cluster.connect("killr_video");
         ResultSet results = session.execute("SELECT * FROM videos");
         System.out.println("sd");
 
-        List<String> movies = new ArrayList<>();
+        List<Videos> movies = new ArrayList<>();
 
 
         for (Row row : results) {
-            movies.add(row.getString("title"));
+            movies.add(new Videos(row.getUUID("video_id"), row.getString("description"),
+                    row.getString("title"), row.getUUID("user_id"),
+                    row.getSet("genres", TypeToken.of(String.class)), row.getSet("tags", TypeToken.of(String.class))));
         }
         return movies ;
     }
